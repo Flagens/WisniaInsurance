@@ -1,0 +1,176 @@
+
+DROP TABLE IF EXISTS risks;
+create table risks
+(
+	id varchar(40) not null
+		constraint risks_pk
+			primary key,
+	price_from float not null,
+	price_to float not null,
+	description varchar(255) not null,
+	policy_type varchar(50) not null
+);
+
+DROP INDEX IF EXISTS risks_id_uindex;
+create unique index risks_id_uindex
+	on risks (id);
+
+DROP TABLE IF EXISTS addresses;
+create table addresses
+(
+	id varchar(40) not null
+		constraint addresses_pk
+			primary key,
+	country varchar(30) not null,
+	zip_code varchar(20) not null,
+	city varchar(30) not null,
+	street varchar(40) not null,
+	building_number varchar(20) not null,
+	apartment_number varchar(20)
+);
+
+DROP INDEX IF EXISTS addresses_id_uindex;
+create unique index addresses_id_uindex
+	on addresses (id);
+
+DROP TABLE IF EXISTS people;
+create table people
+(
+	id varchar(40) not null
+		constraint people_pk
+			primary key,
+	pesel varchar(20),
+	first_name varchar(30),
+	last_name varchar(30)
+);
+
+DROP INDEX IF EXISTS people_id_uindex;
+create unique index people_id_uindex
+	on people (id);
+
+DROP TABLE IF EXISTS enterprises;
+create table enterprises
+(
+	id varchar(40) not null
+		constraint enterprises_pk
+			primary key,
+	nip varchar(30),
+	regon varchar(30),
+	representative_id integer
+		constraint enterprises_people_id_fk
+			references people
+);
+
+DROP TABLE IF EXISTS customer;
+create table customer
+(
+	id varchar(40) not null
+		constraint clients_pk
+			primary key,
+	address_id varchar(40)
+		constraint customer_addresses_id_fk
+			references addresses,
+	phone varchar(30),
+	person_id varchar(40)
+		constraint customer_people_id_fk
+			references people,
+	enterprise_id integer
+		constraint customer_enterprises_id_fk
+			references enterprises
+);
+
+DROP INDEX IF EXISTS clients_id_uindex;
+create unique index clients_id_uindex
+	on customer (id);
+
+DROP TABLE IF EXISTS documents;
+create table documents
+(
+	id varchar(40) not null
+		constraint documents_pk
+			primary key,
+	document_url varchar(100)
+);
+
+DROP INDEX IF EXISTS documents_id_uindex;
+create unique index documents_id_uindex
+	on documents (id);
+
+DROP TABLE IF EXISTS policies;
+create table policies
+(
+	id varchar(40) not null
+		constraint policies_pk
+			primary key,
+	policyholder_id varchar(40),
+	insured_id varchar(40),
+	beneficiary_id varchar(40),
+	duration_from date,
+	duration_to date,
+	price float,
+	policy_type varchar(50) not null,
+	is_active boolean default true
+);
+
+DROP TABLE IF EXISTS damages;
+create table damages
+(
+	id varchar(40) not null
+		constraint damages_pk
+			primary key,
+	policy_id varchar(40) not null
+	    references policies,
+	damage_type varchar(50) not null,
+	victim_id varchar(40)
+		constraint damages_clients_id_fk
+			references clients
+);
+
+DROP INDEX IF EXISTS damages_id_uindex;
+create unique index damages_id_uindex
+	on damages (id);
+
+DROP TABLE IF EXISTS damages_documents;
+create table damages_documents
+(
+	damage_id varchar(40) not null
+		constraint damages_documents_damages_id_fk
+			references damages,
+	document_id varchar(40) not null
+		constraint damages_documents_documents_id_fk
+			references documents
+);
+
+DROP TABLE IF EXISTS policies_risks;
+create table policies_risks
+(
+	policy_id varchar(40) not null
+		constraint policies_risks_policies_id_fk
+			references policies,
+	risk_id varchar(40) not null
+		constraint policies_risks_risks_id_fk
+			references risks
+);
+
+DROP TABLE IF EXISTS incidents;
+create table incidents
+(
+    id varchar(40) not null
+        constraint incidents_pk
+            primary key,
+    incident_date date,
+    address_id varchar(40)
+        constraint incidents_addresses_id_fk
+            references addresses
+);
+
+DROP TABLE IF EXISTS incidents_damages;
+create table incidents_damages
+(
+    incident_id varchar(40) not null
+    		constraint incidents_damages_incidents_id_fk
+    			references incidents,
+    damage_id varchar(40) not null
+        constraint incidents_damages_damages_id_fk
+            references damages
+);
